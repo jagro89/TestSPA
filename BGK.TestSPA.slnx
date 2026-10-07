@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="bgk.testspa.client/bgk.testspa.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="BGK.TestSPA.Server/BGK.TestSPA.Server.csproj" />
+</Solution>

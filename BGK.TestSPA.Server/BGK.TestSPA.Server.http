@@ -1,0 +1,6 @@
+@BGK.TestSPA.Server_HostAddress = http://localhost:5145
+
+GET {{BGK.TestSPA.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
