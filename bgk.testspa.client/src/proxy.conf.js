@@ -7,6 +7,9 @@ const PROXY_CONFIG = [
   {
     context: [
       "/weatherforecast",
+      "/auth",
+      "/signin-oidc",
+      "/signout-callback-oidc",
     ],
     target,
     secure: false

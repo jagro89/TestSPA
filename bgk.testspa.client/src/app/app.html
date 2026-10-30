@@ -1,4 +1,8 @@
-﻿<h1 id="tableLabel">Weather forecast</h1>
+﻿<ng-container *ngIf="isAuthenticated">
+<h1 id="tableLabel">Weather forecast</h1>
+<form method="post" action="/auth/logout">
+    <button type="submit">Wyloguj</button>
+</form>
 
 <p>This component demonstrates fetching data from the server.</p>
 
@@ -22,3 +26,4 @@
         </tr>
     </tbody>
 </table>
+</ng-container>

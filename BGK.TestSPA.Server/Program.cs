@@ -1,4 +1,8 @@
 using BGK.TestSPA.Server.Keycloak;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +15,8 @@ builder.Services.AddKeycloak(builder.Configuration, builder.Environment);
 var app = builder.Build();
 
 app.UseDefaultFiles();
-app.MapStaticAssets();
+app.UseKeycloak();
+app.MapStaticAssets().RequireAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -38,7 +43,36 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapFallbackToFile("/index.html");
+app.MapGet("/auth/user", (HttpContext context) =>
+{
+    if (context.User.Identity?.IsAuthenticated != true)
+        return Results.Unauthorized();
+
+    return Results.Ok(new
+    {
+        name = context.User.Identity.Name,
+        username = context.User.FindFirst("preferred_username")?.Value,
+    });
+}).AllowAnonymous();
+
+app.MapGet("/auth/login", (string? returnUrl) =>
+{
+    var redirectUri = !string.IsNullOrWhiteSpace(returnUrl)
+        && returnUrl.StartsWith('/')
+        && !returnUrl.StartsWith("//")
+        && !returnUrl.StartsWith("/\\")
+        ? returnUrl
+        : "/";
+    return Results.Challenge(
+        new AuthenticationProperties { RedirectUri = redirectUri },
+        [OpenIdConnectDefaults.AuthenticationScheme]);
+}).AllowAnonymous();
+
+app.MapPost("/auth/logout", () => Results.SignOut(
+    new AuthenticationProperties { RedirectUri = "/" },
+    [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]));
+
+app.MapFallbackToFile("/index.html").RequireAuthorization();
 
 app.Run();
 
