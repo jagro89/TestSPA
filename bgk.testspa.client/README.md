@@ -28,13 +28,26 @@ ng generate --help
 
 ## Building
 
-To build the project run:
+Set `BASE_HREF` to the URL path where the application will be hosted, then run the build:
 
 ```bash
-ng build
+BASE_HREF=/test/ npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+On PowerShell:
+
+```bash
+$env:BASE_HREF = "/test/"
+npm run build
+```
+
+You can also pass Angular CLI arguments through the build script, for example `npm run build -- --base-href=/moja-sciezka/`. An explicit `--base-href` argument takes precedence over `BASE_HREF`.
+
+Configure the ASP.NET Core application with the same path using `PathBase` (for example, the Kubernetes environment variable `PathBase=/test`). Configure the ingress to forward requests with the prefix intact so ASP.NET Core can apply the path base. Set `Keycloak:RedirectUri` to the public origin ending in `/signin-oidc` (for example, `https://mojaaplikacja.pl/signin-oidc`); the server adds the path base to the OIDC callback. Register `https://mojaaplikacja.pl/test/signin-oidc` as an allowed redirect URI in Keycloak.
+
+The default base URL is `/`, so omit `BASE_HREF` when hosting at the domain root and leave `PathBase` unset.
+
+The build artifacts are stored in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
 ## Running unit tests
 

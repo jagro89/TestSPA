@@ -55,7 +55,13 @@ namespace BGK.TestSPA.Server.Keycloak
 
                         options.Events.OnRedirectToIdentityProvider = context =>
                         {
-                            context.ProtocolMessage.RedirectUri = keycloak.RedirectUri;
+                            var redirectUri = new UriBuilder(keycloak.RedirectUri);
+                            if (context.Request.PathBase.HasValue)
+                            {
+                                redirectUri.Path = $"{context.Request.PathBase}{options.CallbackPath}";
+                            }
+
+                            context.ProtocolMessage.RedirectUri = redirectUri.Uri.AbsoluteUri;
                             return Task.CompletedTask;
                         };
                     }

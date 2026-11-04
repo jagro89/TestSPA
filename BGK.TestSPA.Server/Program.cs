@@ -12,6 +12,21 @@ builder.Services.AddKeycloak(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
+var pathBase = builder.Configuration["PathBase"]?.Trim();
+if (!string.IsNullOrEmpty(pathBase))
+{
+    pathBase = pathBase.TrimEnd('/');
+    if (pathBase.Length > 0)
+    {
+        if (!pathBase.StartsWith('/') || pathBase.Contains("//") || pathBase.Contains('?') || pathBase.Contains('#') || pathBase.Contains('\\'))
+        {
+            throw new InvalidOperationException("PathBase must be a valid absolute URL path, for example /test.");
+        }
+
+        app.UsePathBase(new PathString(pathBase));
+    }
+}
+
 app.UseDefaultFiles();
 app.UseKeycloak();
 app.MapStaticAssets().RequireAuthorization();
@@ -39,16 +54,18 @@ app.MapGet("/auth/user", (HttpContext context) =>
     });
 }).AllowAnonymous();
 
-app.MapGet("/auth/login", (string? returnUrl) =>
+app.MapGet("/auth/login", (HttpContext context, string? returnUrl) =>
 {
     var redirectUri = !string.IsNullOrWhiteSpace(returnUrl) && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//") && !returnUrl.StartsWith("/\\")
     ? returnUrl
-    : "/";
+    : context.Request.PathBase.Add("/").Value;
 
     return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, [OpenIdConnectDefaults.AuthenticationScheme]);
 }).AllowAnonymous();
 
-app.MapPost("/auth/logout", () => Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]));
+app.MapPost("/auth/logout", (HttpContext context) => Results.SignOut(
+    new AuthenticationProperties { RedirectUri = context.Request.PathBase.Add("/").Value },
+    [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]));
 
 app.MapFallbackToFile("/index.html").RequireAuthorization();
 

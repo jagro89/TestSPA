@@ -15,7 +15,7 @@ export class App implements OnInit {
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) { }
 
   ngOnInit() {
-    this.http.get<{ name?: string; username?: string }>('/auth/user').subscribe({
+    this.http.get<{ name?: string; username?: string }>('auth/user').subscribe({
       next: () => {
         this.isAuthenticated = true;
         this.cdr.detectChanges();
@@ -24,7 +24,7 @@ export class App implements OnInit {
       error: (error) => {
         if (error.status === 401) {
           const returnUrl = `${location.pathname}${location.search}${location.hash}`;
-          location.assign(`/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+          location.assign(`auth/login?returnUrl=${encodeURIComponent(returnUrl)}`);
           return;
         }
 
@@ -34,7 +34,7 @@ export class App implements OnInit {
   }
 
   getData() {
-    this.http.get<string[]>('/test').subscribe(
+    this.http.get<string[]>('test').subscribe(
       (result) => {
         this.list = result;
         this.cdr.detectChanges();
