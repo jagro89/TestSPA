@@ -1,12 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
-
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -15,16 +9,17 @@ interface WeatherForecast {
   templateUrl: './app.html',
 })
 export class App implements OnInit {
-  public forecasts: WeatherForecast[] = [];
+  public list: string[] = [];
   public isAuthenticated = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) { }
 
   ngOnInit() {
     this.http.get<{ name?: string; username?: string }>('/auth/user').subscribe({
       next: () => {
         this.isAuthenticated = true;
-        this.getForecasts();
+        this.cdr.detectChanges();
+        this.getData();
       },
       error: (error) => {
         if (error.status === 401) {
@@ -38,10 +33,11 @@ export class App implements OnInit {
     });
   }
 
-  getForecasts() {
-    this.http.get<WeatherForecast[]>('/weatherforecast').subscribe(
+  getData() {
+    this.http.get<string[]>('/test').subscribe(
       (result) => {
-        this.forecasts = result;
+        this.list = result;
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error(error);

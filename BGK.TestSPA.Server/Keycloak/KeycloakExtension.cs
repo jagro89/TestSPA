@@ -12,10 +12,10 @@ namespace BGK.TestSPA.Server.Keycloak
         {
             services.AddTransient<IClaimsTransformation, KeycloakClaimsTransformation>();
 
-            var keycloak = configuration.GetSection("Keycloak").Get<KeycloakSettings>()
-                ?? throw new InvalidOperationException("Brak konfiguracji sekcji Keycloak.");
+            var keycloak = configuration.GetSection("Keycloak").Get<KeycloakSettings>()                ?? throw new InvalidOperationException("Keycloak section not found.");
+
             if (string.IsNullOrWhiteSpace(keycloak.Server) || string.IsNullOrWhiteSpace(keycloak.Realm) || string.IsNullOrWhiteSpace(keycloak.ClientId))
-                throw new InvalidOperationException("Ustaw Keycloak:Server, Keycloak:Realm i Keycloak:ClientId.");
+                throw new InvalidOperationException("Keycloak:Server, Keycloak:Realm and Keycloak:ClientId is empty.");
 
             services.Configure<KeycloakSettings>(configuration.GetSection("Keycloak"));
 
@@ -45,13 +45,12 @@ namespace BGK.TestSPA.Server.Keycloak
                     options.UsePkce = true;
                     options.SaveTokens = true;
                     options.GetClaimsFromUserInfoEndpoint = true;
+                    options.SignedOutCallbackPath = "/signout-callback-oidc";
                     if (!string.IsNullOrWhiteSpace(keycloak.RedirectUri))
                     {
-                        if (!Uri.TryCreate(keycloak.RedirectUri, UriKind.Absolute, out var redirectUri)
-                            || redirectUri.AbsolutePath != "/signin-oidc")
+                        if (!Uri.TryCreate(keycloak.RedirectUri, UriKind.Absolute, out var redirectUri) || redirectUri.AbsolutePath != "/signin-oidc")
                         {
-                            throw new InvalidOperationException(
-                                "Keycloak:RedirectUri musi być pełnym adresem zakończonym ścieżką /signin-oidc.");
+                            throw new InvalidOperationException("Keycloak:RedirectUri have to end with /signin-oidc.");
                         }
 
                         options.Events.OnRedirectToIdentityProvider = context =>
